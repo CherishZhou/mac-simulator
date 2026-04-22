@@ -5,19 +5,19 @@ import matplotlib.pyplot as plt
 # ================= 1. 网页全局配置 =================
 st.set_page_config(page_title="MAC 全工况性能评估实验室", layout="wide")
 st.title("🎛️ MAC 算法全工况性能评估实验室")
-st.markdown("✅ **真实考场模型**：完全复刻 600步、6大突变工况、带外部扰动的系统。并引入 **ITAE+能量惩罚** 综合代价 $J$ 作为客观量化评价标准。")
+st.markdown("✅ **模型**：完全复刻 600步、6大突变工况、带外部扰动的系统。并引入 **ITAE+能量惩罚** 综合代价 $J$ 作为客观量化评价标准。")
 
 # 设置 Matplotlib 中文字体 (防止方块乱码)
-plt.rcParams['font.sans-serif'] = ['SimHei', 'Arial Unicode MS'] 
+plt.rcParams['font.sans-serif'] = ['WenQuanYi Zen Hei', 'SimHei', 'Arial Unicode MS']
 plt.rcParams['axes.unicode_minus'] = False
 
 # ================= 2. 侧边栏：4D 参数控制台 =================
-st.sidebar.header("🛠️ 结构参数 (物理视野)")
+st.sidebar.header("🛠️ 结构参数")
 N_val = st.sidebar.slider("截断长度 N", min_value=20, max_value=100, value=82, step=1)
 P_val = st.sidebar.slider("预测时域 P", min_value=5, max_value=40, value=32, step=1)
 
 st.sidebar.markdown("---")
-st.sidebar.header("⚙️ 性能参数 (驾驶习惯)")
+st.sidebar.header("⚙️ 性能参数")
 alpha_val = st.sidebar.slider("柔化因子 α", min_value=0.100, max_value=0.990, value=0.796, step=0.001, format="%.3f")
 lam_val = st.sidebar.slider("控制权重 λ", min_value=0.010, max_value=2.000, value=0.110, step=0.001, format="%.3f")
 
