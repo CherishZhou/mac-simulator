@@ -1,15 +1,14 @@
 import streamlit as st
 import numpy as np
-import matplotlib.pyplot as plt
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+
 
 # ================= 1. 网页全局配置 =================
 st.set_page_config(page_title="MAC 全工况性能评估实验室", layout="wide")
 st.title("🎛️ MAC 算法全工况性能评估实验室")
 st.markdown("✅ **模型**：完全复刻 600步、6大突变工况、带外部扰动的系统。并引入 **ITAE+能量惩罚** 综合代价 $J$ 作为客观量化评价标准。")
 
-# 设置 Matplotlib 中文字体 (防止方块乱码)
-plt.rcParams['font.sans-serif'] = ['WenQuanYi Zen Hei', 'SimHei', 'Arial Unicode MS']
-plt.rcParams['axes.unicode_minus'] = False
 
 # ================= 2. 侧边栏：4D 参数控制台 =================
 st.sidebar.header("🛠️ 结构参数")
@@ -144,49 +143,49 @@ with col2:
 
 st.markdown("---")
 
-# ================= 5. 动态绘图渲染 =================
+# ================= 5. 动态绘图渲染 (Plotly 升级版) =================
 if y_res is not None and not diverged:
-    fig, (ax_y, ax_u) = plt.subplots(2, 1, figsize=(14, 9), gridspec_kw={'height_ratios': [2, 1]})
+    # 创建带有两个子图的画布 (上下联动)
+    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.08, row_heights=[0.7, 0.3])
     t_axis = np.arange(600)
 
     # --- 上图：系统输出 ---
-    ax_y.plot(t_axis, sp_res, 'k--', label='设定值 SP')
-    ax_y.plot(t_axis, w_res, 'g:', alpha=0.8, linewidth=2, label='柔化轨迹 W')
-    ax_y.plot(t_axis, y_res, 'r-', linewidth=2, label='系统真实输出 Y')
-    
-    # 绘制分界线与危险高亮
-    for border in range(100, 600, 100):
-        ax_y.axvline(x=border, color='gray', linestyle=':', alpha=0.5)
-    ax_y.axvspan(300, 400, color='red', alpha=0.1, label='危险工况: τ=6 极端滞后')
-    
-    ax_y.set_title(f'600步全工况输出响应 (当前参数: N={N_val}, P={P_val}, α={alpha_val:.3f}, λ={lam_val:.3f})', fontsize=14)
-    ax_y.set_ylabel('输出幅值 Y', fontsize=12)
-    ax_y.set_xlim(0, 600)
-    ax_y.set_ylim(-3.5, 3.5)
-    ax_y.legend(loc='upper right')
-    ax_y.grid(True, linestyle='--', alpha=0.5)
+    fig.add_trace(go.Scatter(x=t_axis, y=sp_res, name='设定值 SP', line=dict(color='black', dash='dash')), row=1, col=1)
+    fig.add_trace(go.Scatter(x=t_axis, y=w_res, name='柔化轨迹 W', line=dict(color='green', dash='dot', width=2)), row=1, col=1)
+    fig.add_trace(go.Scatter(x=t_axis, y=y_res, name='系统真实输出 Y', line=dict(color='red', width=2)), row=1, col=1)
 
-    # --- 下图：控制器输出 ---
-    ax_u.step(t_axis, u_res, 'b-', where='post', label='控制量 U')
-    for border in range(100, 600, 100):
-        ax_u.axvline(x=border, color='gray', linestyle=':', alpha=0.5)
-    ax_u.axvspan(300, 400, color='red', alpha=0.1)
-    
-    ax_u.set_title('控制器动作', fontsize=12)
-    ax_u.set_xlabel('时间步 (k)', fontsize=12)
-    ax_u.set_ylabel('控制量 U', fontsize=12)
-    ax_u.set_xlim(0, 600)
-    ax_u.set_ylim(-15, 15)
-    ax_u.legend(loc='upper right')
-    ax_u.grid(True, linestyle='--', alpha=0.5)
+    # --- 下图：控制器输出 (阶梯图) ---
+    fig.add_trace(go.Scatter(x=t_axis, y=u_res, name='控制量 U', line=dict(color='blue'), line_shape='hv'), row=2, col=1) 
 
-    plt.tight_layout()
-    st.pyplot(fig)
+    # 绘制分界线与危险高亮区
+    for border in range(100, 600, 100):
+        fig.add_vline(x=border, line_dash="dot", line_color="gray", opacity=0.5)
+    
+    # 高亮第4个半周期
+    fig.add_vrect(x0=300, x1=400, fillcolor="red", opacity=0.1, layer="below", line_width=0, 
+                  annotation_text="危险工况: τ=6极端滞后", annotation_position="top left", row=1, col=1)
+    fig.add_vrect(x0=300, x1=400, fillcolor="red", opacity=0.1, layer="below", line_width=0, row=2, col=1)
+
+    # 布局设置
+    fig.update_layout(
+        title=f'600步全工况输出响应 (当前参数: N={N_val}, P={P_val}, α={alpha_val:.3f}, λ={lam_val:.3f})',
+        height=750,
+        hovermode="x unified", # 极其好用的鼠标悬停交互
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        margin=dict(l=40, r=40, t=80, b=40)
+    )
+    
+    fig.update_yaxes(title_text="输出幅值 Y", range=[-3.5, 3.5], row=1, col=1)
+    fig.update_yaxes(title_text="控制量 U", range=[-15, 15], row=2, col=1)
+    fig.update_xaxes(title_text="时间步 (k)", range=[0, 600], row=2, col=1)
+
+    # 在网页上渲染图表
+    st.plotly_chart(fig, use_container_width=True)
+
 elif diverged and y_res is not None:
-    # 即使发散了，也画出前几百步看看是怎么死的
-    fig, ax_y = plt.subplots(figsize=(14, 4))
-    t_axis = np.arange(600)
-    ax_y.plot(t_axis, y_res, 'r-', label='发散轨迹')
-    ax_y.set_title('系统发散前轨迹')
-    ax_y.set_ylim(-10, 10)
-    st.pyplot(fig)
+    # 发散情况的图表
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=np.arange(600), y=y_res, line=dict(color='red')))
+    fig.update_layout(title='系统发散前轨迹', height=400)
+    fig.update_yaxes(range=[-10, 10])
+    st.plotly_chart(fig, use_container_width=True)
