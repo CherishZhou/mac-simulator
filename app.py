@@ -80,8 +80,8 @@ def run_evaluation_simulation(N, P, alpha, lam):
         u_delayed = u[t - 1 - d_true] if (t - 1 - d_true) >= 0 else 0.0
         y[t] = a1 * y[t-1] + b1 * u_delayed
         
-        # 外部扰动
-        if 50 <= t < 100: y[t] += 0.5
+        # ====== 修改 1：变成单次脉冲扰动 ======
+        if t == 51: y[t] += 0.5
 
         # 自由响应预测
         Y_free = np.zeros(P)
@@ -103,8 +103,10 @@ def run_evaluation_simulation(N, P, alpha, lam):
 
         # 求解控制增量
         delta_U_opt = h_vec @ (W - Y_free)
-        du_clip = np.clip(delta_U_opt, -5.0, 5.0)
-        u_next = np.clip(u[t-1] + du_clip, -20.0, 20.0)
+        
+        # ====== 修改 2：严格同步你的物理限幅 ======
+        du_clip = np.clip(delta_U_opt, -2.0, 2.0)
+        u_next = np.clip(u[t-1] + du_clip, -6.0, 6.0)
         
         u[t] = u_next
         delta_u_hist[t] = u_next - u[t-1]
@@ -157,6 +159,10 @@ if y_res is not None and not diverged:
     # --- 下图：控制器输出 (阶梯图) ---
     fig.add_trace(go.Scatter(x=t_axis, y=u_res, name='控制量 U', line=dict(color='blue'), line_shape='hv'), row=2, col=1) 
 
+    fig.add_hline(y=6.0, line_dash="dash", line_color="orange", annotation_text="输出上限 (6.0)", row=2, col=1)
+    fig.add_hline(y=-6.0, line_dash="dash", line_color="orange", annotation_text="输出下限 (-6.0)", row=2, col=1)
+
+    # 绘制分界线与危险高亮区
     # 绘制分界线与危险高亮区
     for border in range(100, 600, 100):
         fig.add_vline(x=border, line_dash="dot", line_color="gray", opacity=0.5)
@@ -176,7 +182,7 @@ if y_res is not None and not diverged:
     )
     
     fig.update_yaxes(title_text="输出幅值 Y", range=[-3.5, 3.5], row=1, col=1)
-    fig.update_yaxes(title_text="控制量 U", range=[-15, 15], row=2, col=1)
+    fig.update_yaxes(title_text="控制量 U", range=[-8, 8], row=2, col=1)
     fig.update_xaxes(title_text="时间步 (k)", range=[0, 600], row=2, col=1)
 
     # 在网页上渲染图表
