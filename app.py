@@ -12,13 +12,13 @@ st.markdown("✅ **模型**：完全复刻 600步、6大突变工况、带外部
 
 # ================= 2. 侧边栏：4D 参数控制台 =================
 st.sidebar.header("🛠️ 结构参数")
-N_val = st.sidebar.slider("截断长度 N", min_value=20, max_value=100, value=82, step=1)
-P_val = st.sidebar.slider("预测时域 P", min_value=5, max_value=40, value=32, step=1)
+N_val = st.sidebar.slider("截断长度 N", min_value=20, max_value=100, value=59, step=1)
+P_val = st.sidebar.slider("预测时域 P", min_value=5, max_value=40, value=39, step=1)
 
 st.sidebar.markdown("---")
 st.sidebar.header("⚙️ 性能参数")
-alpha_val = st.sidebar.slider("柔化因子 α", min_value=0.100, max_value=0.990, value=0.796, step=0.001, format="%.3f")
-lam_val = st.sidebar.slider("控制权重 λ", min_value=0.010, max_value=2.000, value=0.110, step=0.001, format="%.3f")
+alpha_val = st.sidebar.slider("柔化因子 α", min_value=0.100, max_value=0.990, value=0.822, step=0.001, format="%.3f")
+lam_val = st.sidebar.slider("控制权重 λ", min_value=0.010, max_value=2.000, value=0.154, step=0.001, format="%.3f")
 
 st.sidebar.markdown("---")
 st.sidebar.success("💡 综合评价指标 J 越小，代表系统在所有工况下的综合表现越完美。")
